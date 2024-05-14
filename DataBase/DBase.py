@@ -1,5 +1,3 @@
-from typing import Tuple, Any
-
 import psycopg2
 
 
