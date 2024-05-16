@@ -69,7 +69,6 @@ async def new_admin(message: Message, command: CommandObject):
 
     db = DBase.Database()
     current_chat = f'{message.from_user.id}'
-
     if not db.is_powered(admin_group_name, current_chat):
         await message.answer(
             'У вас недостаточно прав, чтобы добавлять админов в эту группу!'
@@ -80,7 +79,7 @@ async def new_admin(message: Message, command: CommandObject):
 
     if execution_code < 0:
         await message.answer(
-            'Что-то пошло не так, попробуйте ещё раз!'
+            'Неправильные id пользователя или название группы!'
         )
         return
 

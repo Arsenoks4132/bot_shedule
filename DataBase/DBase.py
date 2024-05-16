@@ -147,7 +147,7 @@ class Database:
             return data
 
     def is_powered(self, group_name, chat_id):
-        if self.get_role(chat_id) == 'main_admin':
+        if self.get_role(chat_id) == ('main_admin', ):
             return True
 
         groups = self.subordinate_groups(chat_id)
