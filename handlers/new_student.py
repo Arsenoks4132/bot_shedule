@@ -11,14 +11,18 @@ router = Router()
 @router.message(Command("start"))
 async def cmd_start(message: Message):
     db = DBase.Database()
-    user_id = str(message.from_user.id)
-    group_name = db.student_group(user_id)
-    if group_name is None:
+    current_chat = f'{message.from_user.id}'
+    student_id = db.get_student_id(current_chat)
+    if current_chat == '622603789' and student_id is None:
+        db.start()
+        student_id = 1
+
+    if student_id is None:
         await message.answer(
             'Извините, но мы не знаем, кто вы.\n'
-            f'Ваш id: `{user_id}`\n'
-            'Если вы староста - отправьте его главному админу!',
+            f'Ваш id: `{current_chat}`\n'
+            'Если вы должны быть админом - отправьте его админу этой группы или главному админу!',
             parse_mode='MARKDOWN'
         )
     else:
-        await message.answer(f'Ваша группа - {group_name}')
+        await message.answer(f'Доброго времени суток!')
