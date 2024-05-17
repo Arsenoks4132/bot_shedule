@@ -1,5 +1,4 @@
 import psycopg2
-from datetime import datetime
 
 
 def e(x):
@@ -132,6 +131,18 @@ class Database:
             data = cursor.fetchone()
             return data
 
+    def get_group_name(self, chat_id):
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT study_group.group_name FROM student
+                LEFT JOIN study_group ON study_group.group_id = student.group_id
+                WHERE student.chat_id = '{e(chat_id)}'
+                """
+            )
+            data = cursor.fetchone()
+            return data
+
     def get_student_id(self, chat_id):
         with self.connection.cursor() as cursor:
             cursor.execute(
@@ -174,6 +185,19 @@ class Database:
             data = cursor.fetchall()
             return data
 
+    def date_list(self, group_name, subject):
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT DISTINCT hometask.deadline FROM hometask
+                LEFT JOIN study_group ON study_group.group_id = hometask.group_id
+                WHERE study_group.group_name = '{e(group_name)}' AND hometask.subject = '{e(subject)}'
+                ORDER BY hometask.deadline
+                """
+            )
+            data = cursor.fetchall()
+            return data
+
     def add_hometask(self, data):
         with self.connection.cursor() as cursor:
             group_id = self.get_group_id(data['chosen_group'])
@@ -184,7 +208,7 @@ class Database:
                 INSERT INTO hometask
                 (subject, deadline, task, group_id)
                 VALUES ('{e(data['entered_subject'])}',
-                '{data['entered_date'][2]}-{data['entered_date'][1]}-{data['entered_date'][0]}', 
+                '{data['entered_date'].strftime('%Y-%m-%d')}', 
                 '{e(data['entered_text'])}', {group_id[0]})
                 RETURNING hometask_id
                 """
@@ -223,10 +247,7 @@ class Database:
                 return None
             ht_data['group'] = data[5]
             ht_data['subject'] = data[1]
-            dt = data[2]
-            ht_data['dl_day'] = dt.day
-            ht_data['dl_month'] = dt.month
-            ht_data['dl_year'] = dt.year
+            ht_data['date'] = data[2]
             ht_data['task'] = data[3]
 
             cursor.execute(
@@ -241,3 +262,16 @@ class Database:
             else:
                 ht_data['images'] = []
             return ht_data
+
+    def get_hometask_id(self, group_name, subject, deadline):
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT hometask.hometask_id FROM hometask
+                LEFT JOIN study_group ON hometask.group_id = study_group.group_id
+                WHERE study_group.group_name = '{group_name}' AND
+                hometask.subject = '{subject}' AND hometask.deadline = '{deadline.strftime('%Y-%m-%d')}'
+                """
+            )
+            data = cursor.fetchone()
+            return data

@@ -10,19 +10,6 @@ from keyboards import listKeyboard, replyListKB
 
 from datetime import datetime
 
-router = Router()
-
-
-@router.message(Command('cancel'))
-async def cancel_all(
-        message: Message,
-        state: FSMContext
-):
-    await state.clear()
-    await message.answer(
-        'Действие прервано!'
-    )
-
 
 class HometaskAdd(StatesGroup):
     choosing_group = State()
@@ -32,9 +19,15 @@ class HometaskAdd(StatesGroup):
     sending_image = State()
 
 
+router = Router()
+
+
 # Хэндлер на команду /add_hometask
 @router.message(StateFilter(None), Command("add_hometask"))
-async def start_hometask(message: Message, state: FSMContext):
+async def start_hometask(
+        message: Message,
+        state: FSMContext
+):
     db = DBase.Database()
     current_chat = f'{message.from_user.id}'
     groups = db.subordinate_groups(current_chat)
@@ -111,7 +104,7 @@ async def subject_entered_wrong(
     )
 
 
-# Выбор даты
+# Ввод даты
 @router.message(HometaskAdd.entering_date, F.text)
 async def date_entered(
         message: Message,
@@ -119,9 +112,6 @@ async def date_entered(
 ):
     try:
         date = datetime.strptime(message.text, '%d.%m.%Y')
-        day = date.day
-        month = date.month
-        year = date.year
     except ValueError:
         await message.answer(
             'Вы ввели несуществующую дату либо ввели дату в неверном формате.\n'
@@ -129,7 +119,7 @@ async def date_entered(
         )
         return
 
-    await state.update_data(entered_date=[day, month, year])
+    await state.update_data(entered_date=date)
     await message.answer(
         f'Дата сохранена!\n'
         'Введите текст домашнего задания'
@@ -174,6 +164,7 @@ async def text_entered_wrong(
     )
 
 
+# Отправлено изображение
 @router.message(HometaskAdd.sending_image, F.photo)
 async def image_sent(
         message: Message,
@@ -194,6 +185,7 @@ async def image_sent(
         await hometask_done(message, state)
 
 
+# Завершение создания домашнего задания
 @router.message(HometaskAdd.sending_image)
 async def hometask_done(
         message: Message,
@@ -201,7 +193,7 @@ async def hometask_done(
 ):
     db = DBase.Database()
     ht_data = await state.get_data()
-    hometask_id = db.add_hometask(dict(ht_data))
+    hometask_id = db.add_hometask(ht_data)
     if hometask_id <= 0:
         await message.answer(
             'Что-то пошло не так, попробуйте добавить задание ещё раз'
