@@ -1,4 +1,10 @@
 import psycopg2
+from datetime import datetime
+
+
+def e(x):
+    x = x.replace("'", '"')
+    return x
 
 
 class Database:
@@ -30,7 +36,7 @@ class Database:
                 cursor.execute(
                     f"""
                     INSERT INTO study_group (group_name)
-                    VALUES('{group_name}')
+                    VALUES('{e(group_name)}')
                     RETURNING group_id
                     """
                 )
@@ -44,7 +50,7 @@ class Database:
             cursor.execute(
                 f"""
                 INSERT INTO student (chat_id, group_id)
-                VALUES('{chat_id}', {group_id})
+                VALUES('{e(chat_id)}', {group_id})
                 RETURNING student_id
                 """
             )
@@ -87,7 +93,7 @@ class Database:
                 f"""
                 UPDATE student
                 SET user_role = 'main_admin'
-                WHERE chat_id = '{chat_id}'
+                WHERE chat_id = '{e(chat_id)}'
                 """
             )
             self.connection.commit()
@@ -98,7 +104,7 @@ class Database:
                 f"""
                 UPDATE student
                 SET role = NULL
-                WHERE chat_id = '{chat_id}'
+                WHERE chat_id = '{e(chat_id)}'
                 """
             )
             self.connection.commit()
@@ -110,7 +116,7 @@ class Database:
                 SELECT study_group.group_name FROM admin_relate
                 LEFT JOIN student ON student.student_id = admin_relate.student_id
                 LEFT JOIN study_group ON study_group.group_id = admin_relate.group_id
-                WHERE student.chat_id = '{chat_id}'
+                WHERE student.chat_id = '{e(chat_id)}'
                 """
             )
             data = cursor.fetchall()
@@ -120,7 +126,7 @@ class Database:
         with self.connection.cursor() as cursor:
             cursor.execute(
                 f"""
-                SELECT user_role FROM student WHERE chat_id = '{chat_id}' 
+                SELECT user_role FROM student WHERE chat_id = '{e(chat_id)}' 
                 """
             )
             data = cursor.fetchone()
@@ -130,7 +136,7 @@ class Database:
         with self.connection.cursor() as cursor:
             cursor.execute(
                 f"""
-                SELECT student_id FROM student WHERE chat_id = '{chat_id}'
+                SELECT student_id FROM student WHERE chat_id = '{e(chat_id)}'
                 """
             )
             data = cursor.fetchone()
@@ -140,17 +146,98 @@ class Database:
         with self.connection.cursor() as cursor:
             cursor.execute(
                 f"""
-                SELECT group_id FROM study_group WHERE group_name = '{group_name}'
+                SELECT group_id FROM study_group WHERE group_name = '{e(group_name)}'
                 """
             )
             data = cursor.fetchone()
             return data
 
     def is_powered(self, group_name, chat_id):
-        if self.get_role(chat_id) == ('main_admin', ):
+        if self.get_role(chat_id) == ('main_admin',):
             return True
 
         groups = self.subordinate_groups(chat_id)
         if (group_name,) not in groups:
             return False
         return True
+
+    def subjects_list(self, group_name):
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT DISTINCT hometask.subject FROM hometask
+                LEFT JOIN study_group ON study_group.group_id = hometask.group_id
+                WHERE study_group.group_name = '{e(group_name)}'
+                ORDER BY hometask.subject
+                """
+            )
+            data = cursor.fetchall()
+            return data
+
+    def add_hometask(self, data):
+        with self.connection.cursor() as cursor:
+            group_id = self.get_group_id(data['chosen_group'])
+            if group_id is None:
+                return -1
+            cursor.execute(
+                f"""
+                INSERT INTO hometask
+                (subject, deadline, task, group_id)
+                VALUES ('{e(data['entered_subject'])}',
+                '{data['entered_date'][2]}-{data['entered_date'][1]}-{data['entered_date'][0]}', 
+                '{e(data['entered_text'])}', {group_id[0]})
+                RETURNING hometask_id
+                """
+            )
+            self.connection.commit()
+
+            ht_id = cursor.fetchone()
+            if ht_id is None:
+                return -1
+            if 'sent_images' not in data:
+                return ht_id[0]
+            images = data['sent_images']
+            for image in images:
+                cursor.execute(
+                    f"""
+                    INSERT INTO image
+                    (server_id, hometask_id)
+                    VALUES ('{image}', {ht_id[0]})
+                    """
+                )
+                self.connection.commit()
+            return ht_id[0]
+
+    def get_hometask(self, hometask_id):
+        with self.connection.cursor() as cursor:
+            ht_data = dict()
+            cursor.execute(
+                f"""
+                SELECT * FROM hometask
+                LEFT JOIN study_group ON hometask.group_id = study_group.group_id
+                WHERE hometask.hometask_id = {hometask_id}
+                """
+            )
+            data = cursor.fetchone()
+            if cursor is None:
+                return None
+            ht_data['group'] = data[5]
+            ht_data['subject'] = data[1]
+            dt = data[2]
+            ht_data['dl_day'] = dt.day
+            ht_data['dl_month'] = dt.month
+            ht_data['dl_year'] = dt.year
+            ht_data['task'] = data[3]
+
+            cursor.execute(
+                f"""
+                SELECT server_id FROM image
+                WHERE hometask_id = {hometask_id}
+                """
+            )
+            data = cursor.fetchall()
+            if data is not None:
+                ht_data['images'] = [item[0] for item in data]
+            else:
+                ht_data['images'] = []
+            return ht_data

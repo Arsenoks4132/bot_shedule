@@ -33,19 +33,19 @@ async def new_student(message: Message, command: CommandObject):
         return
 
     execution_code = db.add_student(student_group_name, student_chat_id)
-    
+
     if execution_code < 0:
         await message.answer(
             'Что-то пошло не так, попробуйте ещё раз!'
         )
         return
-    
+
     if execution_code == 0:
         await message.answer(
             'Этот студент уже был добавлен ранее!'
         )
         return
-    
+
     await message.answer(
         'Студент добавлен!'
     )
