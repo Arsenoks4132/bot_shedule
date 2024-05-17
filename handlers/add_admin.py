@@ -72,6 +72,7 @@ async def admin_group_text(
         await message.answer(
             'У вас недостаточно прав, чтобы добавлять админов в эту группу!'
         )
+        await state.clear()
         return
     await message.answer(
         f'Выбрана группа - {admin_group_name}\n'
@@ -107,11 +108,13 @@ async def admin_id(
         await message.answer(
             'Что-то пошло не так, попробуйте ещё раз!'
         )
+        await state.clear()
         return
     if execution_code == 0:
         await message.answer(
             'Этот админ уже был добавлен ранее!'
         )
+        await state.clear()
         return
     await message.answer(
         f'Админ с айди "{admin_chat_id}" '

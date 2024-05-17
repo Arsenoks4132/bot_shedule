@@ -72,6 +72,7 @@ async def student_group_text(
         await message.answer(
             'У вас недостаточно прав, чтобы добавлять студентов в эту группу!'
         )
+        await state.clear()
         return
     await message.answer(
         f'Выбрана группа - {student_group_name}\n'
@@ -107,11 +108,13 @@ async def student_id(
         await message.answer(
             'Что-то пошло не так, попробуйте ещё раз!'
         )
+        await state.clear()
         return
     if execution_code == 0:
         await message.answer(
             'Этот студент уже был добавлен ранее!'
         )
+        await state.clear()
         return
     await message.answer(
         f'Студент с айди "{student_chat_id}" '

@@ -198,6 +198,7 @@ async def hometask_done(
         await message.answer(
             'Что-то пошло не так, попробуйте добавить задание ещё раз'
         )
+        await state.clear()
         return
     await message.answer(
         'Домашнее задание добавлено!\n'

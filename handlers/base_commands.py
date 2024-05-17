@@ -44,13 +44,3 @@ async def cancel_all(
         'Выберите любую команду из Меню чтобы начать новый диалог',
         reply_markup=ReplyKeyboardRemove()
     )
-
-
-# Хендлер на любое сообщение при отсутствии начатого диалога
-@router.message(StateFilter(None))
-async def any_message(
-        message: Message
-):
-    await message.answer(
-        'Чтобы начать диалог, выберите любую команду из Меню'
-    )
