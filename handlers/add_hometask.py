@@ -68,6 +68,35 @@ async def group_chosen(
     await callback.answer()
 
 
+# Ввод группы сообщением
+@router.message(HometaskAdd.choosing_group, F.text)
+async def hometask_group_text(
+        message: Message,
+        state: FSMContext
+):
+    admin_group_name = f'{message.text}'
+    db = DBase.Database()
+    current_chat = f'{message.from_user.id}'
+    if not db.is_powered(admin_group_name, current_chat):
+        await message.answer(
+            'У вас недостаточно прав, чтобы добавлять задания в эту группу!'
+        )
+        await state.clear()
+        return
+
+    await state.update_data(chosen_group=admin_group_name)
+    subjects = db.subjects_list(admin_group_name)
+    subjects = [item[0] for item in subjects]
+
+    await message.answer(
+        f'Выбрана группа - {admin_group_name}\n'
+        f'Выберите предмет из списка, или введите название нового предмета',
+        reply_markup=replyListKB.make_reply_keyboard(subjects)
+    )
+
+    await state.set_state(HometaskAdd.entering_subject)
+
+
 # Ошибочный выбор группы
 @router.message(HometaskAdd.choosing_group)
 async def grope_chosen_wrong(message: Message):

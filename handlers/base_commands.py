@@ -22,7 +22,7 @@ async def cmd_start(message: Message):
         await message.answer(
             'Извините, но мы не знаем, кто вы.\n'
             f'Ваш id: `{current_chat}`\n'
-            'Если вы должны быть админом - отправьте его админу этой группы или главному админу!',
+            'Отправьте его админу этой группы или главному админу!',
             parse_mode='MARKDOWN'
         )
     else:

@@ -113,8 +113,8 @@ class Database:
             cursor.execute(
                 f"""
                 SELECT study_group.group_name FROM admin_relate
-                LEFT JOIN student ON student.student_id = admin_relate.student_id
-                LEFT JOIN study_group ON study_group.group_id = admin_relate.group_id
+                LEFT JOIN student USING (student_id)
+                LEFT JOIN study_group USING (group_id)
                 WHERE student.chat_id = '{e(chat_id)}'
                 """
             )
@@ -136,7 +136,7 @@ class Database:
             cursor.execute(
                 f"""
                 SELECT study_group.group_name FROM student
-                LEFT JOIN study_group ON study_group.group_id = student.group_id
+                LEFT JOIN study_group USING (group_id)
                 WHERE student.chat_id = '{e(chat_id)}'
                 """
             )
@@ -177,7 +177,7 @@ class Database:
             cursor.execute(
                 f"""
                 SELECT DISTINCT hometask.subject FROM hometask
-                LEFT JOIN study_group ON study_group.group_id = hometask.group_id
+                LEFT JOIN study_group USING (group_id)
                 WHERE study_group.group_name = '{e(group_name)}'
                 ORDER BY hometask.subject
                 """
@@ -190,7 +190,7 @@ class Database:
             cursor.execute(
                 f"""
                 SELECT DISTINCT hometask.deadline FROM hometask
-                LEFT JOIN study_group ON study_group.group_id = hometask.group_id
+                LEFT JOIN study_group USING (group_id)
                 WHERE study_group.group_name = '{e(group_name)}' AND hometask.subject = '{e(subject)}'
                 ORDER BY hometask.deadline
                 """
@@ -238,7 +238,7 @@ class Database:
             cursor.execute(
                 f"""
                 SELECT * FROM hometask
-                LEFT JOIN study_group ON hometask.group_id = study_group.group_id
+                LEFT JOIN study_group USING (group_id)
                 WHERE hometask.hometask_id = {hometask_id}
                 """
             )
@@ -246,9 +246,9 @@ class Database:
             if cursor is None:
                 return None
             ht_data['group'] = data[5]
-            ht_data['subject'] = data[1]
-            ht_data['date'] = data[2]
-            ht_data['task'] = data[3]
+            ht_data['subject'] = data[2]
+            ht_data['date'] = data[3]
+            ht_data['task'] = data[4]
 
             cursor.execute(
                 f"""
@@ -268,7 +268,7 @@ class Database:
             cursor.execute(
                 f"""
                 SELECT hometask.hometask_id FROM hometask
-                LEFT JOIN study_group ON hometask.group_id = study_group.group_id
+                LEFT JOIN study_group USING (group_id)
                 WHERE study_group.group_name = '{group_name}' AND
                 hometask.subject = '{subject}' AND hometask.deadline = '{deadline.strftime('%Y-%m-%d')}'
                 """
