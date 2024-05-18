@@ -39,7 +39,8 @@ async def start_hometask(
 
     group_list = [item[0] for item in groups]
     await message.answer(
-        'Выберите группу для добавления задания:',
+        'Выберите группу для добавления задания:'
+        'Если нужной группы нет в списке - отправьте её название сообщением',
         reply_markup=listKeyboard.make_list_keyboard(group_list)
     )
     await state.set_state(HometaskAdd.choosing_group)

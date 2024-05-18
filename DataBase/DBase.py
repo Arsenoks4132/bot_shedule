@@ -1,5 +1,5 @@
 import psycopg2
-from utilities import e
+from DataBase.utilities import e
 
 
 class Database:
@@ -109,8 +109,8 @@ class Database:
             cursor.execute(
                 f"""
                 SELECT study_group.group_name FROM admin_relate
-                LEFT JOIN student USING (student_id)
-                LEFT JOIN study_group USING (group_id)
+                LEFT JOIN student ON student.student_id = admin_relate.student_id
+                LEFT JOIN study_group ON study_group.group_id = admin_relate.group_id
                 WHERE student.chat_id = '{e(chat_id)}'
                 """
             )
