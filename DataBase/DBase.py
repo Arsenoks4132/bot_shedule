@@ -1,9 +1,5 @@
 import psycopg2
-
-
-def e(x):
-    x = x.replace("'", '"')
-    return x
+from utilities import e
 
 
 class Database:
@@ -275,3 +271,5 @@ class Database:
             )
             data = cursor.fetchone()
             return data
+
+

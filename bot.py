@@ -3,6 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from config_reader import config
 
+# Импорт хендлеров для обработки сообщений
 from handlers import base_commands, add_admin, add_hometask, add_student, get_hometask, anything
 
 
@@ -25,5 +26,9 @@ async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
+
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+
