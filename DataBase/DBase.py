@@ -203,9 +203,11 @@ class Database:
                 f"""
                 INSERT INTO hometask
                 (subject, deadline, task, group_id)
-                VALUES ('{e(data['entered_subject'])}',
+                VALUES (
+                '{e(data['entered_subject'])}',
                 '{data['entered_date'].strftime('%Y-%m-%d')}', 
-                '{e(data['entered_text'])}', {group_id[0]})
+                '{e(data['entered_text'])}', {group_id[0]}
+                )
                 RETURNING hometask_id
                 """
             )
